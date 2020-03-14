@@ -3,68 +3,157 @@ import React, { useState } from "react";
 import menu from "../mock/menu.json";
 
 const MainMenu = () => {
-  const initialState = {
-    mainChecked: false,
-    showRelated: false
-  };
-  const [state, setState] = useState(initialState);
+  // const initialState = {
+  //   mainChecked: false,
+  //   showRelated: false
+  // };
+  const [state, setState] = useState<any>(menu);
 
-  const handleClick = (e: any) => {
-    setState({
-      ...state,
-      [e.target.id]: e.target.checked
+  const handleClick = (name: String) => {
+    setState((state: any) =>
+      state.map((item: any) => {
+        let val = item;
+        if (item.name === name) {
+          val = {
+            ...val,
+            expand: val.expand ? false : true,
+            expandChoices: val.expand ? false : val.expandChoices,
+            related: val.related.map((related: any) => ({
+              ...related,
+              expandRelated: val.expand ? false : related.expandRelated
+            }))
+          };
+        }
+
+        return val;
+      })
+    );
+  };
+
+  const otherChoicesUnchecked = (name: any, choices: any): boolean => {
+    const checkedChoices = choices.filter((choice: any) => {
+      if (choice.checked && choice.name !== name) {
+        return true;
+      }
+      return false;
     });
+
+    return checkedChoices.length === 0;
   };
 
-  console.log(menu);
+  const clickChoice = (name: string, choiceName: string) => {
+    setState((state: any) =>
+      state.map((item: any) => {
+        let val = item;
+        if (item.name === name) {
+          const othersUnchecked = otherChoicesUnchecked(
+            choiceName,
+            val.choices
+          );
+
+          val = {
+            ...val,
+            expandChoices: val.expandChoices && othersUnchecked ? false : true,
+            related: val.related.map((related: any) => ({
+              ...related,
+              expandRelated:
+                val.expandChoices && othersUnchecked ? false : val.expandRelated
+            })),
+            choices: val.choices.map((choice: any) => {
+              if (choice.name === choiceName) {
+                return {
+                  ...choice,
+                  checked:
+                    choice.checked && choice.name === choiceName
+                      ? false
+                      : choice.name === choiceName
+                };
+              }
+
+              return choice;
+            })
+          };
+        }
+
+        return val;
+      })
+    );
+  };
+
+  const openRelated = (choiceName: string, relatedName: string) => {
+    setState((state: any) =>
+      state.map((item: any) => {
+        let value = item;
+        let related = [];
+
+        if (value.name === choiceName) {
+          related = value.related.map((related: any) => {
+            if (related.name === relatedName) {
+              return {
+                ...related,
+                expandRelated: related.expandRelated ? false : true
+              };
+            }
+            return related;
+          });
+        }
+
+        return { ...value, related };
+      })
+    );
+  };
 
   return (
     <div>
-      {menu.map((menu, idx) => {
+      {state.map((menu: any, idx: any) => {
         return (
           <>
             <div key={idx}>
               <label htmlFor={menu.name}>{menu.name}</label>
-              <input id={"mainChecked"} type="checkbox" onClick={handleClick} />
+              <input
+                id={"mainChecked"}
+                type="checkbox"
+                onClick={() => handleClick(menu.name)}
+              />
             </div>
 
             {/* choices */}
-            {state.mainChecked &&
-              menu.choices.map(choice => {
+            {menu.expand &&
+              menu.choices.map((choice: any) => {
                 return (
                   <div className="choices">
                     <label>{choice.name}</label>
                     <input
                       id="showRelated"
                       type="checkbox"
-                      onClick={e => handleClick(e)}
+                      onClick={e => clickChoice(menu.name, choice.name)}
                     />
                   </div>
                 );
               })}
 
-            {/* related */}
-            {state.showRelated &&
-              menu.related.map((related: any) => {
+            {/* related names*/}
+            {menu.expandChoices &&
+              menu.related.map((choice: any) => {
                 return (
-                  <>
-                    <div className="choices">
-                      <p>You might also like</p>
-                      <label>{related.name}</label>
-                      <input id={related.name} type="checkbox" />
-                    </div>
-
+                  <div className="related-choices">
+                    <label className="choices">{choice.name}</label>
+                    <input
+                      id={choice.name}
+                      type="checkbox"
+                      onClick={() => openRelated(menu.name, choice.name)}
+                    />
                     {/* related choices */}
-                    {state.mainChecked &&
-                      related.choices.map((choice: any) => {
+                    {choice.expandRelated &&
+                      choice.choices.map((relatedChoice: any) => {
                         return (
-                          <div className="related-choices">
-                            <label className="choices">{choice.name}</label>
-                            <input id={choice.name} type="checkbox" />
+                          <div className="related-choice">
+                            <label className="">{relatedChoice.name}</label>
+                            <input id={relatedChoice.name} type="checkbox" />
                           </div>
                         );
                       })}
-                  </>
+                  </div>
                 );
               })}
           </>
