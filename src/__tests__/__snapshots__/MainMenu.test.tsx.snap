@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Tests for main menu component should render main menu component without fail 1`] = `ReactWrapper {}`;

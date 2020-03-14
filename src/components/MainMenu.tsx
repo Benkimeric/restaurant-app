@@ -3,10 +3,6 @@ import React, { useState } from "react";
 import menu from "../mock/menu.json";
 
 const MainMenu = () => {
-  // const initialState = {
-  //   mainChecked: false,
-  //   showRelated: false
-  // };
   const [state, setState] = useState<any>(menu);
 
   const handleClick = (name: String) => {
@@ -105,6 +101,7 @@ const MainMenu = () => {
 
   return (
     <div>
+      <h1>Restaurant Menu</h1>
       {state.map((menu: any, idx: any) => {
         return (
           <>
@@ -133,6 +130,9 @@ const MainMenu = () => {
               })}
 
             {/* related names*/}
+            {menu.expandChoices && menu.related.length > 0 && (
+              <p className="related-choices">You may also want:</p>
+            )}
             {menu.expandChoices &&
               menu.related.map((choice: any) => {
                 return (
